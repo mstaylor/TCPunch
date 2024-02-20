@@ -42,7 +42,7 @@ void * longPollSend(void* args) {
     while (result >=0) {
         result = send(threadArgs->client_socket, buffer, sizeof(threadArgs->info), 0);
         if (result > 0) {
-            std::cout << "Replied to client with pairing name: " << threadArgs->pairing_name << std::endl;
+            std::cout << "Replied to client with pairing name: " << threadArgs->pairing_name <<  ip_to_string(&threadArgs->info.ip.s_addr) << ":" << ntohs(threadArgs->info.port) <<std::endl;
         } else {
             std::cout << "Error when replying: " << strerror(errno) << std::endl;
         }
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
 
 
         if (send(client_socket, buffer, sizeof(info), 0) > 0) {
-            std::cout << "Replied to client with pairing name: " << pairing_name << std::endl;
+            std::cout << "Replied to client with pairing name: " << pairing_name <<  ip_to_string(&info.ip.s_addr) << ":" << ntohs(info.port) <<std::endl;
         } else {
             std::cout << "Error when replying: " << strerror(errno) << std::endl;
         }
