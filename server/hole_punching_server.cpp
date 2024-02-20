@@ -8,6 +8,7 @@
 #include <map>
 #include <iostream>
 #include "../common/utils.h"
+#include <pthread.h>
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
@@ -15,11 +16,36 @@
 
 typedef struct {
     int socket;
-    struct sockaddr_in client_info;	
+    struct sockaddr_in client_info;
 } ConnectionData;
+
+typedef struct {
+    int client_socket;
+    PeerConnectionData info;
+    std::string pairing_name;
+} thread_args_t;
 
 static const size_t MAX_PAIRING_NAME = 100;
 std::map<std::string, ConnectionData> clients;
+
+void * longPollSend(void* args) {
+    thread_args_t* threadArgs = (thread_args_t*)args;
+    ssize_t result = 0;
+    char buffer[MAX_PAIRING_NAME] = {0};
+
+    memcpy(buffer, &threadArgs->info, sizeof(threadArgs->info));
+
+    while (result >=0) {
+        result = send(threadArgs->client_socket, buffer, sizeof(threadArgs->info), 0);
+        if (result > 0) {
+            std::cout << "Replied to client with pairing name: " << threadArgs->pairing_name << std::endl;
+        } else {
+            std::cout << "Error when replying: " << strerror(errno) << std::endl;
+        }
+    }
+
+    return nullptr;
+}
 
 int main(int argc, char** argv) {
     int listen_port = DEFAULT_LISTEN_PORT;
@@ -42,11 +68,12 @@ int main(int argc, char** argv) {
     if (server_socket == -1) {
         error_exit_errno("Error when creating socket: ");
     }
-    
+
     int enable_flag = 1;
     if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &enable_flag, sizeof(int)) < 0) {
         error_exit_errno("Setting REUSEADDR failed: ");
     }
+
 
     server_data.sin_family = AF_INET;
     server_data.sin_addr.s_addr = INADDR_ANY;
@@ -89,13 +116,28 @@ int main(int argc, char** argv) {
         info.port = client_data.sin_port;
         memcpy(buffer, &info, sizeof(info));
 
+
+
         if (send(client_socket, buffer, sizeof(info), 0) > 0) {
             std::cout << "Replied to client with pairing name: " << pairing_name << std::endl;
         } else {
             std::cout << "Error when replying: " << strerror(errno) << std::endl;
         }
 
+        pthread_t ping_thread;
 
+        thread_args_t args;
+        args.client_socket = client_socket;
+        args.info = info;
+        args.pairing_name = pairing_name;
+        //TODO: finish implementing long polling
+        int thread_return = pthread_create(&ping_thread, NULL, longPollSend, (void*) &args);
+        if(thread_return) {
+            std::cout << "Error when creating thread for listening: " << std::endl;
+
+        }
+
+        /*
         auto existing_entry = clients.find(pairing_name);
         if (existing_entry != clients.end()) {
             // First client with same pairing name already connected, reply to both
@@ -130,7 +172,7 @@ int main(int argc, char** argv) {
             client.socket = client_socket;
             client.client_info = client_data;
             clients[pairing_name] = client;
-        }
+        }*/
     }
 
     return 0;
