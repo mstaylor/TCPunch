@@ -9,6 +9,8 @@
 #include <iostream>
 #include "../common/utils.h"
 #include <pthread.h>
+#include <thread>
+#include <chrono>
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
@@ -35,6 +37,8 @@ void * longPollSend(void* args) {
 
     memcpy(buffer, &threadArgs->info, sizeof(threadArgs->info));
 
+    std::cout << "starting long polling " << std::endl;
+
     while (result >=0) {
         result = send(threadArgs->client_socket, buffer, sizeof(threadArgs->info), 0);
         if (result > 0) {
@@ -42,6 +46,7 @@ void * longPollSend(void* args) {
         } else {
             std::cout << "Error when replying: " << strerror(errno) << std::endl;
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
     return nullptr;
