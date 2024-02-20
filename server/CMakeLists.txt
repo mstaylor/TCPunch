@@ -11,4 +11,4 @@ find_package(Threads REQUIRED)
 
 add_executable(tcpunchd hole_punching_server.cpp)
 
-target_link_libraries(tcpunchd PRIVATE Threads::Threads)
+target_link_libraries (myapp ${CMAKE_THREAD_LIBS_INIT})
