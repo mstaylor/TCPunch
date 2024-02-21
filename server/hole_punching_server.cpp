@@ -16,6 +16,8 @@
 #pragma ide diagnostic ignored "EndlessLoop"
 #define DEFAULT_LISTEN_PORT 10000
 
+#define PAIRING_NAME "cylon"
+
 typedef struct {
     int socket;
     struct sockaddr_in client_info;
@@ -129,17 +131,20 @@ int main(int argc, char** argv) {
             std::cout << "Error when replying: " << strerror(errno) << std::endl;
         }
 
-        pthread_t ping_thread;
+        if (pairing_name == PAIRING_NAME) {
 
-        thread_args_t args;
-        args.client_socket = client_socket;
-        args.info = info;
-        args.pairing_name = pairing_name;
-        //TODO: finish implementing long polling
-        int thread_return = pthread_create(&ping_thread, NULL, longPollSend, (void*) &args);
-        if(thread_return) {
-            std::cout << "Error when creating thread for listening: " << std::endl;
+            pthread_t ping_thread;
 
+            thread_args_t args;
+            args.client_socket = client_socket;
+            args.info = info;
+            args.pairing_name = pairing_name;
+
+            int thread_return = pthread_create(&ping_thread, NULL, longPollSend, (void *) &args);
+            if (thread_return) {
+                std::cout << "Error when creating thread for listening: " << std::endl;
+
+            }
         }
 
         /*
