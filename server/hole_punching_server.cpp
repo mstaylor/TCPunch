@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include <thread>
 #include <chrono>
+#include <vector>
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
@@ -31,6 +32,8 @@ typedef struct {
 
 static const size_t MAX_PAIRING_NAME = 100;
 std::map<std::string, ConnectionData> clients;
+
+std::vector<pthread_t> vectorOfThreads;
 
 void * longPollSend(void* args) {
     thread_args_t* threadArgs = (thread_args_t*)args;
@@ -145,6 +148,8 @@ int main(int argc, char** argv) {
                 std::cout << "Error when creating thread for listening: " << std::endl;
 
             }
+
+            vectorOfThreads.push_back(ping_thread);
         }
 
         /*
