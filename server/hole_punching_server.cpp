@@ -51,7 +51,7 @@ void * longPollSend(void* args) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
-    return nullptr;
+    pthread_exit(nullptr);
 }
 
 int main(int argc, char** argv) {
@@ -184,6 +184,8 @@ int main(int argc, char** argv) {
             clients[pairing_name] = client;
         }*/
     }
+
+
 
     return 0;
 }
