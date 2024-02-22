@@ -50,11 +50,12 @@ void * longPollSend(void* args) {
             std::cout << "Replied to client with pairing name: " << threadArgs->pairing_name <<  ip_to_string(&threadArgs->info.ip.s_addr) << ":" << ntohs(threadArgs->info.port) <<std::endl;
         } else {
             std::cout << "Error when replying: " << strerror(errno) << std::endl;
+            pthread_exit(nullptr);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
-    pthread_exit(nullptr);
+
 }
 
 int main(int argc, char** argv) {
