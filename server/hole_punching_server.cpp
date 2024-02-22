@@ -44,13 +44,13 @@ void * longPollSend(void* args) {
 
     std::cout << "starting long polling " << std::endl;
 
-    while (result >=0) {
+    while (true) {
         result = send(threadArgs->client_socket, buffer, sizeof(threadArgs->info), 0);
         if (result > 0) {
             std::cout << "Replied to client with pairing name: " << threadArgs->pairing_name <<  ip_to_string(&threadArgs->info.ip.s_addr) << ":" << ntohs(threadArgs->info.port) <<std::endl;
         } else {
             std::cout << "Error when replying: " << strerror(errno) << std::endl;
-            pthread_exit(nullptr);
+            return NULL;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
