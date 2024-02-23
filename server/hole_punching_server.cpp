@@ -1,6 +1,5 @@
 #include <cstring>
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <cerrno>
@@ -8,10 +7,6 @@
 #include <map>
 #include <iostream>
 #include "../common/utils.h"
-#include <pthread.h>
-#include <thread>
-#include <chrono>
-#include <vector>
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
@@ -33,30 +28,9 @@ typedef struct {
 static const size_t MAX_PAIRING_NAME = 100;
 std::map<std::string, ConnectionData> clients;
 
-std::vector<pthread_t> vectorOfThreads;
-
-void * longPollSend(void* args) {
-    thread_args_t* threadArgs = (thread_args_t*)args;
-    ssize_t result = 0;
-    char buffer[MAX_PAIRING_NAME] = {0};
-
-    memcpy(buffer, &threadArgs->info, sizeof(threadArgs->info));
-
-    std::cout << "starting long polling " << std::endl;
-
-    while (true) {
-        result = send(threadArgs->client_socket, buffer, sizeof(threadArgs->info), 0);
-        if (result > 0) {
-            std::cout << "Replied to client with pairing name: " << threadArgs->pairing_name <<  ip_to_string(&threadArgs->info.ip.s_addr) << ":" << ntohs(threadArgs->info.port) <<std::endl;
-        } else {
-            std::cout << "Error when replying: " << strerror(errno) << std::endl;
-            return NULL;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
 
 
-}
+
 
 int main(int argc, char** argv) {
     int listen_port = DEFAULT_LISTEN_PORT;
@@ -133,24 +107,6 @@ int main(int argc, char** argv) {
             std::cout << "Replied to client with pairing name: " << pairing_name <<  ip_to_string(&info.ip.s_addr) << ":" << ntohs(info.port) <<std::endl;
         } else {
             std::cout << "Error when replying: " << strerror(errno) << std::endl;
-        }
-
-        if (pairing_name == PAIRING_NAME) {
-
-            pthread_t ping_thread;
-
-            thread_args_t args;
-            args.client_socket = client_socket;
-            args.info = info;
-            args.pairing_name = pairing_name;
-
-            int thread_return = pthread_create(&ping_thread, NULL, longPollSend, (void *) &args);
-            if (thread_return) {
-                std::cout << "Error when creating thread for listening: " << std::endl;
-
-            }
-
-            vectorOfThreads.push_back(ping_thread);
         }
 
         /*
