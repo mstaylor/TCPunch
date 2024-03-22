@@ -11,7 +11,7 @@ typedef struct {
 } PeerConnectionData;
 
 typedef struct {
-    char[100] pairing_name;
+    char pairing_name[100];
     int worldSize;
     int worldRank;
 
