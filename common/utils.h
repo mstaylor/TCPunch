@@ -10,6 +10,13 @@ typedef struct {
     in_port_t      port;
 } PeerConnectionData;
 
+typedef struct {
+    char[100] pairing_name;
+    int worldSize;
+    int worldRank;
+
+} PeeringNameData;
+
 void error_exit(const std::string& error_string) {
     throw std::runtime_error{error_string};
 }

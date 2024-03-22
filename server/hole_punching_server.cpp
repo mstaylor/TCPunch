@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
             std::cout << "Error when replying: " << strerror(errno) << std::endl;
         }
 
-        /*
+        //TODO: support > 2 clients
         auto existing_entry = clients.find(pairing_name);
         if (existing_entry != clients.end()) {
             // First client with same pairing name already connected, reply to both
@@ -144,11 +144,11 @@ int main(int argc, char** argv) {
             client.socket = client_socket;
             client.client_info = client_data;
             clients[pairing_name] = client;
-        }*/
+        }
     }
 
 
 
-    return 0;
+    //return 0;
 }
 #pragma clang diagnostic pop
