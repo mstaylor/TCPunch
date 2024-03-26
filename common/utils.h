@@ -6,6 +6,7 @@
 #include "../client/tcpunch.h"
 
 typedef struct {
+    int socket;
     struct in_addr ip;
     in_port_t      port;
 } PeerConnectionData;
@@ -13,7 +14,6 @@ typedef struct {
 typedef struct {
     char pairing_name[100];
     int worldSize;
-    int worldRank;
 
 } PeeringNameData;
 
