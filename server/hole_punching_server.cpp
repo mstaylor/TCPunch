@@ -86,12 +86,9 @@ int main(int argc, char** argv) {
         }
 
         char buffer[MAX_PAIRING_NAME] = {0};
-        //char client_msg_buffer[MAX_PAIRING_NAME] = {0};
-        PeeringNameData peeringNameData;
-
-        int n = recv(client_socket, &peeringNameData, sizeof (peeringNameData), 0);
-        std::string pairing_name = std::string(peeringNameData.pairing_name);
-        int world_size = peeringNameData.worldSize;
+        char client_msg_buffer[MAX_PAIRING_NAME] = {0};
+        int n = recv(client_socket, (void*)client_msg_buffer, MAX_PAIRING_NAME, 0);
+        std::string pairing_name = std::string(client_msg_buffer);
         if (n == 0) {
             std::cout << "Client has disconnected" << std::endl;
         } else if (n == -1) {
@@ -100,52 +97,22 @@ int main(int argc, char** argv) {
             std::cout << "Connection request from client with pairing name: " << pairing_name << std::endl;
         }
 
+        PeerConnectionData info;
+        info.ip = client_data.sin_addr;
+        info.port = client_data.sin_port;
+        memcpy(buffer, &info, sizeof(info));
+
+
+
+        if (send(client_socket, buffer, sizeof(info), 0) > 0) {
+            std::cout << "Replied to client with pairing name: " << pairing_name <<  ip_to_string(&info.ip.s_addr) << ":" << ntohs(info.port) <<std::endl;
+        } else {
+            std::cout << "Error when replying: " << strerror(errno) << std::endl;
+        }
+
+        /*
         auto existing_entry = clients.find(pairing_name);
-        std::list<PeerConnectionData> lists;
-
-        if (existing_entry != clients.end()) { //found an entry so get list
-            lists = existing_entry->second;
-
-        } else { //add new element
-
-            clients[pairing_name] = lists;
-        }
-
-        PeerConnectionData client;
-        client.socket = client_socket;
-        client.ip = client_data.sin_addr;
-        client.port = client_data.sin_port;
-
-        lists.push_back(client);
-
-        //handle send here
-
-        std::cout << "current list size: " << lists.size() << " pairing name: " << pairing_name << std::endl;
-
-        if (lists.size() == (world_size *2)) { //if all processes have connected, iterate through list and return
-            for (auto info : lists) {
-                memcpy(buffer, &info, sizeof(info));
-                if (send(client_socket, buffer, sizeof(info), 0) > 0) {
-                    std::cout << "Replied to client with pairing name: " << pairing_name << ip_to_string(&info.ip.s_addr)
-                              << ":" << ntohs(info.port) << std::endl;
-                } else {
-                    std::cout << "Error when replying: " << strerror(errno) << std::endl;
-                }
-                close(info.socket);//close socket
-            }
-            //erase map
-            clients.erase(pairing_name);
-            //PeerConnectionData info;
-            //info.ip = client_data.sin_addr;
-            //info.port = client_data.sin_port;
-
-        }
-
-
-/*
-
         if (existing_entry != clients.end()) {
-
             // First client with same pairing name already connected, reply to both
             PeerConnectionData info1;
             info1.ip = client_data.sin_addr;
@@ -183,6 +150,6 @@ int main(int argc, char** argv) {
 
 
 
-    //return 0;
+    return 0;
 }
 #pragma clang diagnostic pop

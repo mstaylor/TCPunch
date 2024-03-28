@@ -6,16 +6,9 @@
 #include "../client/tcpunch.h"
 
 typedef struct {
-    int socket;
     struct in_addr ip;
     in_port_t      port;
 } PeerConnectionData;
-
-typedef struct {
-    char pairing_name[100];
-    int worldSize;
-
-} PeeringNameData;
 
 void error_exit(const std::string& error_string) {
     throw std::runtime_error{error_string};
