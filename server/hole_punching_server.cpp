@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 
 
         if (send(client_socket, buffer, sizeof(info), 0) > 0) {
-            std::cout << "Replied to client with pairing name: " << pairing_name <<  ip_to_string(&info.ip.s_addr) << ":" << ntohs(info.port) <<std::endl;
+            std::cout << "Replied to client with pairing name: " << pairing_name << " " << ip_to_string(&info.ip.s_addr) << ":" << ntohs(info.port) <<std::endl;
         } else {
             std::cout << "Error when replying: " << strerror(errno) << std::endl;
         }
