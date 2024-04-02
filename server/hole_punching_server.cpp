@@ -89,10 +89,19 @@ int main(int argc, char** argv) {
         char client_msg_buffer[MAX_PAIRING_NAME] = {0};
         int n = recv(client_socket, (void*)client_msg_buffer, MAX_PAIRING_NAME, 0);
         std::string pairing_name = std::string(client_msg_buffer);
+        if (pairing_name.find("cylon") ==-1) {
+            std::cout << "could not find cylon in pairing name" << std::endl;
+            close(client_socket);
+            continue;
+        }
         if (n == 0) {
             std::cout << "Client has disconnected" << std::endl;
+            close(client_socket);
+            continue;
         } else if (n == -1) {
             std::cout << "Recv failed: " << strerror(errno) << std::endl;
+            close(client_socket);
+            continue;
         } else {
             std::cout << "Connection request from client with pairing name: " << pairing_name << std::endl;
         }
