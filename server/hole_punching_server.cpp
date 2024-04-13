@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
             std::cout << "Error when replying: " << strerror(errno) << std::endl;
         }
 
-        close(client_socket);
+        //close(client_socket);
 
         /*
         auto existing_entry = clients.find(pairing_name);
