@@ -1,5 +1,6 @@
 #include <cstring>
 #include <unistd.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <cerrno>
@@ -7,33 +8,18 @@
 #include <map>
 #include <iostream>
 #include "../common/utils.h"
-#include <list>
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
 #define DEFAULT_LISTEN_PORT 10000
-
-#define PAIRING_NAME "cylon"
 
 typedef struct {
     int socket;
     struct sockaddr_in client_info;
 } ConnectionData;
 
-typedef struct {
-    int client_socket;
-    PeerConnectionData info;
-    std::string pairing_name;
-} thread_args_t;
-
 static const size_t MAX_PAIRING_NAME = 100;
-//std::map<std::string, ConnectionData> clients;
-std::map<std::string, std::list<PeerConnectionData>> clients;
-
-
-
-
-
+std::map<std::string, ConnectionData> clients;
 
 int main(int argc, char** argv) {
     int listen_port = DEFAULT_LISTEN_PORT;
@@ -62,7 +48,6 @@ int main(int argc, char** argv) {
         error_exit_errno("Setting REUSEADDR failed: ");
     }
 
-
     server_data.sin_family = AF_INET;
     server_data.sin_addr.s_addr = INADDR_ANY;
     server_data.sin_port = htons(listen_port);
@@ -85,23 +70,16 @@ int main(int argc, char** argv) {
             error_exit_errno("Accepting clients failed: ");
         }
 
+
+
         char buffer[MAX_PAIRING_NAME] = {0};
         char client_msg_buffer[MAX_PAIRING_NAME] = {0};
         int n = recv(client_socket, (void*)client_msg_buffer, MAX_PAIRING_NAME, 0);
         std::string pairing_name = std::string(client_msg_buffer);
-        if (pairing_name.find("cylon") ==-1) {
-            std::cout << "could not find cylon in pairing name" << std::endl;
-            close(client_socket);
-            continue;
-        }
         if (n == 0) {
             std::cout << "Client has disconnected" << std::endl;
-            close(client_socket);
-            continue;
         } else if (n == -1) {
             std::cout << "Recv failed: " << strerror(errno) << std::endl;
-            close(client_socket);
-            continue;
         } else {
             std::cout << "Connection request from client with pairing name: " << pairing_name << std::endl;
         }
@@ -111,17 +89,13 @@ int main(int argc, char** argv) {
         info.port = client_data.sin_port;
         memcpy(buffer, &info, sizeof(info));
 
-
-
         if (send(client_socket, buffer, sizeof(info), 0) > 0) {
-            std::cout << "Replied to client with pairing name: " << pairing_name << " " << ip_to_string(&info.ip.s_addr) << ":" << ntohs(info.port) <<std::endl;
+            std::cout << "Replied to client with pairing name: " << pairing_name << std::endl;
         } else {
             std::cout << "Error when replying: " << strerror(errno) << std::endl;
         }
 
-        //close(client_socket);
 
-        /*
         auto existing_entry = clients.find(pairing_name);
         if (existing_entry != clients.end()) {
             // First client with same pairing name already connected, reply to both
@@ -156,10 +130,8 @@ int main(int argc, char** argv) {
             client.socket = client_socket;
             client.client_info = client_data;
             clients[pairing_name] = client;
-        }*/
+        }
     }
-
-
 
     return 0;
 }
