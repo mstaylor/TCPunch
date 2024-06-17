@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <exception>
 
-#define DEBUG 0
+#define DEBUG 1
 
 struct Timeout : public std::exception {};
 

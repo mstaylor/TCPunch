@@ -175,7 +175,7 @@ int pair(const std::string& pairing_name, const std::string& server_address, int
             }
         } else {
             #if DEBUG
-            std::cout << "Succesfully connected to peer, peer_status" << std::endl;
+            std::cout << "Succesfully connected to peer" << std::endl;
             #endif
             break;
         }
