@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
         int n = recv(client_socket, (void*)client_msg_buffer, MAX_PAIRING_NAME, 0);
         std::string pairing_name = std::string(client_msg_buffer);
 
-        std::string valid_pair("fmi_pair");
+        std::string valid_pair("pair");
         if (pairing_name.find(valid_pair) == std::string::npos) {
             std::cout << "Client sent invalid pair: " << pairing_name << std::endl;
             close(client_socket);
