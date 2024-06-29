@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
         std::string pairing_name = std::string(client_msg_buffer);
 
 
-        if (pairing_name.find(delete_pairs) == std::string::npos) {
+        if (pairing_name.find(delete_pairs) != std::string::npos) {
             clients.clear();
             std::cout << "cleared all clients" << std::endl;
             close(client_socket);
