@@ -23,6 +23,8 @@ std::map<std::string, ConnectionData> clients;
 
 int main(int argc, char** argv) {
     int listen_port = DEFAULT_LISTEN_PORT;
+    std::string valid_pair("pair");
+    std::string delete_pairs("delete_pairs");
     if (argc == 2) {
         char *p;
         long input = strtol(argv[1], &p, 10);
@@ -77,8 +79,14 @@ int main(int argc, char** argv) {
         int n = recv(client_socket, (void*)client_msg_buffer, MAX_PAIRING_NAME, 0);
         std::string pairing_name = std::string(client_msg_buffer);
 
-        std::string valid_pair("pair");
-        if (pairing_name.find(valid_pair) == std::string::npos) {
+
+        if (pairing_name.find(delete_pairs) == std::string::npos) {
+            clients.clear();
+            std::cout << "cleared all clients" << std::endl;
+            close(client_socket);
+            continue;
+
+        } else if (pairing_name.find(valid_pair) == std::string::npos) {
             std::cout << "Client sent invalid pair: " << pairing_name << std::endl;
             close(client_socket);
             continue;
