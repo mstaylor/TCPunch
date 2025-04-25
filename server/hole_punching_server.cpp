@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     if (listen(server_socket, 255) == -1) {
         error_exit_errno("Listening failed: ");
     }
-    std::cout << "Listening for connections on port: " << listen_port << std::endl;
+    std::cout << "Listening for connections on PORT: " << listen_port << std::endl;
 
     while(true) {
         struct sockaddr_in client_data{};
@@ -115,7 +115,13 @@ int main(int argc, char** argv) {
         if (existing_entry != clients.end()) {
             // First client with same pairing name already connected, reply to both
             PeerConnectionData info1;
-            info1.ip = client_data.sin_addr;
+            //info1.ip = client_data.sin_addr;
+
+            if (inet_pton(AF_INET, "127.0.0.1", &info1.ip) != 1) {
+                // Handle error
+                perror("inet_pton failed");
+            }
+
             info1.port = client_data.sin_port;
 
             if(send(clients[pairing_name].socket, &info1, sizeof(info1), 0) > 0) {
@@ -128,7 +134,11 @@ int main(int argc, char** argv) {
 
             PeerConnectionData info2;
             // Client 1 receives client 0 info
-            info2.ip = clients[pairing_name].client_info.sin_addr;
+            //info2.ip = clients[pairing_name].client_info.sin_addr;
+            if (inet_pton(AF_INET, "127.0.0.1", &info2.ip) != 1) {
+                // Handle error
+                perror("inet_pton failed");
+            }
             info2.port = clients[pairing_name].client_info.sin_port;
 
             if(send(client_socket, &info2, sizeof(info2), 0) > 0) {
