@@ -88,6 +88,65 @@ Configure the NLB target group to use the HTTP health check endpoint:
 
 If running multiple ECS tasks behind the NLB, set `REDIS_URL` via an ECS task definition environment variable or AWS Secrets Manager. See [Multi-Node behind a Network Load Balancer](#multi-node-behind-a-network-load-balancer-redis-required) above.
 
+## Terraform
+
+A ready-to-use Terraform configuration is in the [`terraform/`](../../terraform/) directory. It provisions:
+
+- **ECR repository** — stores the Docker image, with a lifecycle policy keeping the last 10 images
+- **ECS Fargate cluster + service + task definition**
+- **Network Load Balancer** with TCP listener on port 10000 and HTTP health check on port 10001
+- **Route 53 alias record** pointing to the NLB
+- **CloudWatch log group** for container logs
+- **IAM execution role** for ECS
+
+### First-time setup
+
+```bash
+cd terraform
+
+# Copy and fill in your values
+cp terraform.tfvars.example terraform.tfvars
+
+terraform init
+terraform plan
+terraform apply
+```
+
+### Pushing an image
+
+After `terraform apply`, push your image to the ECR repository:
+
+```bash
+# Get the ECR URL from Terraform output
+ECR_URL=$(terraform output -raw ecr_repository_url)
+AWS_REGION=us-east-1
+
+# Authenticate Docker to ECR
+aws ecr get-login-password --region $AWS_REGION | \
+  docker login --username AWS --password-stdin $ECR_URL
+
+# Build and push
+docker build -t tcpunchd ../../server/rust
+docker tag tcpunchd:latest $ECR_URL:latest
+docker push $ECR_URL:latest
+```
+
+### Deploying a new version
+
+```bash
+# Force ECS to pull the latest image and replace tasks
+aws ecs update-service \
+  --cluster tcpunch \
+  --service tcpunch \
+  --force-new-deployment
+```
+
+Or tag a specific version and update `image_tag` in `terraform.tfvars`, then `terraform apply`.
+
+### Scaling to multi-node
+
+Set `desired_count > 1` and provide a `redis_url` in `terraform.tfvars`, then `terraform apply`.
+
 ## Graceful Shutdown
 
 The server handles `SIGTERM` and `SIGINT`. On shutdown it stops accepting new connections and waits up to 30 seconds for active connections to drain before exiting.

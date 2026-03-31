@@ -1,0 +1,13 @@
+aws_region      = "us-east-1"
+vpc_id          = "vpc-xxxxxxxxxxxxxxxxx"
+subnet_ids      = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
+route53_zone_id = "ZXXXXXXXXXXXXXXXXX"
+dns_name        = "tcpunch.example.com"
+image_tag       = "latest"
+
+# Single-node (default) — leave redis_url unset
+# desired_count = 1
+
+# Multi-node — uncomment and set redis_url
+# desired_count = 2
+# redis_url     = "redis://your-elasticache-endpoint:6379"

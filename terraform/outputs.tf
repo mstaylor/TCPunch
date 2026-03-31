@@ -1,0 +1,29 @@
+output "ecr_repository_url" {
+  description = "ECR repository URL — use this to push images"
+  value       = aws_ecr_repository.tcpunch.repository_url
+}
+
+output "nlb_dns_name" {
+  description = "NLB DNS name"
+  value       = aws_lb.tcpunch.dns_name
+}
+
+output "server_dns_name" {
+  description = "Route 53 DNS name for the server"
+  value       = var.dns_name
+}
+
+output "ecs_cluster_name" {
+  description = "ECS cluster name"
+  value       = aws_ecs_cluster.tcpunch.name
+}
+
+output "ecs_service_name" {
+  description = "ECS service name"
+  value       = aws_ecs_service.tcpunch.name
+}
+
+output "cloudwatch_log_group" {
+  description = "CloudWatch log group for ECS task logs"
+  value       = aws_cloudwatch_log_group.tcpunch.name
+}
