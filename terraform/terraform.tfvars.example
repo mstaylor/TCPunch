@@ -11,4 +11,5 @@ image_tag        = "latest"
 
 # Multi-node — uncomment and set redis_url
 # desired_count = 2
-# redis_url     = "redis://your-elasticache-endpoint:6379"
+# redis_url     = "redis://your-elasticache-endpoint:6379"(base) StaylorsTemple3:terraform mstaylor$ docker inspect rendezvous:latest | grep Architecture
+                                                                  "Architecture": "amd64",
