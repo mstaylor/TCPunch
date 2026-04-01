@@ -219,9 +219,10 @@ resource "aws_ecs_service" "rendezvous" {
 # ============================================================
 
 resource "aws_route53_record" "rendezvous" {
-  zone_id = var.route53_zone_id
-  name    = var.dns_name
-  type    = "A"
+  zone_id         = var.route53_zone_id
+  name            = var.dns_name
+  type            = "A"
+  allow_overwrite = true
 
   alias {
     name                   = aws_lb.rendezvous.dns_name
