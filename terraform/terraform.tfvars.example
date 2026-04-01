@@ -2,8 +2,9 @@ aws_region      = "us-east-1"
 vpc_id          = "vpc-xxxxxxxxxxxxxxxxx"
 subnet_ids      = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
 route53_zone_id = "ZXXXXXXXXXXXXXXXXX"
-dns_name        = "tcpunch.example.com"
-image_tag       = "latest"
+dns_name         = "tcpunch.example.com"
+ecs_cluster_name = "CylonFargateExperiments"
+image_tag        = "latest"
 
 # Single-node (default) — leave redis_url unset
 # desired_count = 1

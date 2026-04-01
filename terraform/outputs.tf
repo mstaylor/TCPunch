@@ -15,7 +15,7 @@ output "server_dns_name" {
 
 output "ecs_cluster_name" {
   description = "ECS cluster name"
-  value       = aws_ecs_cluster.tcpunch.name
+  value       = data.aws_ecs_cluster.tcpunch.cluster_name
 }
 
 output "ecs_service_name" {

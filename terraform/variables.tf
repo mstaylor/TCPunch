@@ -30,6 +30,12 @@ variable "dns_name" {
   type        = string
 }
 
+variable "ecs_cluster_name" {
+  description = "Name of an existing ECS Fargate cluster to deploy into"
+  type        = string
+  default     = "CylonFargateExperiments"
+}
+
 variable "desired_count" {
   description = "Number of ECS tasks to run (use 1 for single-node, >1 requires redis_url)"
   type        = number

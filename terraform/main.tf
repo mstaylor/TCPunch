@@ -64,26 +64,11 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
 }
 
 # ============================================================
-# ECS Cluster
+# ECS Cluster (existing)
 # ============================================================
 
-resource "aws_ecs_cluster" "tcpunch" {
-  name = var.name
-
-  setting {
-    name  = "containerInsights"
-    value = "enabled"
-  }
-}
-
-resource "aws_ecs_cluster_capacity_providers" "tcpunch" {
-  cluster_name       = aws_ecs_cluster.tcpunch.name
-  capacity_providers = ["FARGATE"]
-
-  default_capacity_provider_strategy {
-    capacity_provider = "FARGATE"
-    weight            = 1
-  }
+data "aws_ecs_cluster" "tcpunch" {
+  cluster_name = var.ecs_cluster_name
 }
 
 # ============================================================
@@ -230,7 +215,7 @@ resource "aws_lb_listener" "tcpunch" {
 
 resource "aws_ecs_service" "tcpunch" {
   name            = var.name
-  cluster         = aws_ecs_cluster.tcpunch.id
+  cluster         = data.aws_ecs_cluster.tcpunch.arn
   task_definition = aws_ecs_task_definition.tcpunch.arn
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
