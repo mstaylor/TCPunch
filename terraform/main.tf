@@ -2,7 +2,7 @@
 # ECR Repository
 # ============================================================
 
-resource "aws_ecr_repository" "tcpunch" {
+resource "aws_ecr_repository" "rendezvous" {
   name                 = var.name
   image_tag_mutability = "MUTABLE"
 
@@ -11,8 +11,8 @@ resource "aws_ecr_repository" "tcpunch" {
   }
 }
 
-resource "aws_ecr_lifecycle_policy" "tcpunch" {
-  repository = aws_ecr_repository.tcpunch.name
+resource "aws_ecr_lifecycle_policy" "rendezvous" {
+  repository = aws_ecr_repository.rendezvous.name
 
   policy = jsonencode({
     rules = [
@@ -34,7 +34,7 @@ resource "aws_ecr_lifecycle_policy" "tcpunch" {
 # CloudWatch Log Group
 # ============================================================
 
-resource "aws_cloudwatch_log_group" "tcpunch" {
+resource "aws_cloudwatch_log_group" "rendezvous" {
   name              = "/ecs/${var.name}"
   retention_in_days = 30
 }
@@ -67,7 +67,7 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
 # ECS Cluster (existing)
 # ============================================================
 
-data "aws_ecs_cluster" "tcpunch" {
+data "aws_ecs_cluster" "rendezvous" {
   cluster_name = var.ecs_cluster_name
 }
 
@@ -75,7 +75,7 @@ data "aws_ecs_cluster" "tcpunch" {
 # ECS Task Definition
 # ============================================================
 
-resource "aws_ecs_task_definition" "tcpunch" {
+resource "aws_ecs_task_definition" "rendezvous" {
   family                   = var.name
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
@@ -86,7 +86,7 @@ resource "aws_ecs_task_definition" "tcpunch" {
   container_definitions = jsonencode([
     {
       name      = var.name
-      image     = "${aws_ecr_repository.tcpunch.repository_url}:${var.image_tag}"
+      image     = "${aws_ecr_repository.rendezvous.repository_url}:${var.image_tag}"
       essential = true
 
       portMappings = [
@@ -114,7 +114,7 @@ resource "aws_ecs_task_definition" "tcpunch" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.tcpunch.name
+          "awslogs-group"         = aws_cloudwatch_log_group.rendezvous.name
           "awslogs-region"        = var.aws_region
           "awslogs-stream-prefix" = "ecs"
         }
@@ -137,7 +137,7 @@ resource "aws_ecs_task_definition" "tcpunch" {
 
 resource "aws_security_group" "ecs_tasks" {
   name        = "${var.name}-ecs-tasks"
-  description = "Allow inbound from NLB to tcpunch tasks"
+  description = "Allow inbound from NLB to rendezvous tasks"
   vpc_id      = var.vpc_id
 
   # NLBs do not have security groups — traffic arrives from the VPC CIDR
@@ -169,7 +169,7 @@ resource "aws_security_group" "ecs_tasks" {
 # Network Load Balancer
 # ============================================================
 
-resource "aws_lb" "tcpunch" {
+resource "aws_lb" "rendezvous" {
   name               = var.name
   load_balancer_type = "network"
   internal           = false
@@ -179,7 +179,7 @@ resource "aws_lb" "tcpunch" {
 }
 
 # Target group — TCP port 10000 with HTTP health check on 10001
-resource "aws_lb_target_group" "tcpunch" {
+resource "aws_lb_target_group" "rendezvous" {
   name        = var.name
   port        = 10000
   protocol    = "TCP"
@@ -198,14 +198,14 @@ resource "aws_lb_target_group" "tcpunch" {
   deregistration_delay = 30
 }
 
-resource "aws_lb_listener" "tcpunch" {
-  load_balancer_arn = aws_lb.tcpunch.arn
+resource "aws_lb_listener" "rendezvous" {
+  load_balancer_arn = aws_lb.rendezvous.arn
   port              = 10000
   protocol          = "TCP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.tcpunch.arn
+    target_group_arn = aws_lb_target_group.rendezvous.arn
   }
 }
 
@@ -213,10 +213,10 @@ resource "aws_lb_listener" "tcpunch" {
 # ECS Service
 # ============================================================
 
-resource "aws_ecs_service" "tcpunch" {
+resource "aws_ecs_service" "rendezvous" {
   name            = var.name
-  cluster         = data.aws_ecs_cluster.tcpunch.arn
-  task_definition = aws_ecs_task_definition.tcpunch.arn
+  cluster         = data.aws_ecs_cluster.rendezvous.arn
+  task_definition = aws_ecs_task_definition.rendezvous.arn
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
 
@@ -227,7 +227,7 @@ resource "aws_ecs_service" "tcpunch" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.tcpunch.arn
+    target_group_arn = aws_lb_target_group.rendezvous.arn
     container_name   = var.name
     container_port   = 10000
   }
@@ -235,21 +235,21 @@ resource "aws_ecs_service" "tcpunch" {
   deployment_minimum_healthy_percent = 100
   deployment_maximum_percent         = 200
 
-  depends_on = [aws_lb_listener.tcpunch]
+  depends_on = [aws_lb_listener.rendezvous]
 }
 
 # ============================================================
 # Route 53
 # ============================================================
 
-resource "aws_route53_record" "tcpunch" {
+resource "aws_route53_record" "rendezvous" {
   zone_id = var.route53_zone_id
   name    = var.dns_name
   type    = "A"
 
   alias {
-    name                   = aws_lb.tcpunch.dns_name
-    zone_id                = aws_lb.tcpunch.zone_id
+    name                   = aws_lb.rendezvous.dns_name
+    zone_id                = aws_lb.rendezvous.zone_id
     evaluate_target_health = true
   }
 }

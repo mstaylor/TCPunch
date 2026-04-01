@@ -82,5 +82,5 @@ variable "log_level" {
 variable "name" {
   description = "Name prefix for all resources"
   type        = string
-  default     = "tcpunch"
+  default     = "rendezvous"
 }

@@ -2,7 +2,7 @@ aws_region      = "us-east-1"
 vpc_id          = "vpc-xxxxxxxxxxxxxxxxx"
 subnet_ids      = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
 route53_zone_id = "ZXXXXXXXXXXXXXXXXX"
-dns_name         = "tcpunch.example.com"
+dns_name         = "rendezvous.example.com"
 ecs_cluster_name = "CylonFargateExperiments"
 image_tag        = "latest"
 
