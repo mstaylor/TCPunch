@@ -14,6 +14,12 @@ variable "subnet_ids" {
   type        = list(string)
 }
 
+variable "ecr_repository_name" {
+  description = "Name of an existing ECR repository"
+  type        = string
+  default     = "cylon-armada"
+}
+
 variable "image_tag" {
   description = "Docker image tag to deploy (e.g. latest, v1.2.3, git SHA)"
   type        = string

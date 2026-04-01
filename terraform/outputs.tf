@@ -1,6 +1,6 @@
 output "ecr_repository_url" {
   description = "ECR repository URL — use this to push images"
-  value       = aws_ecr_repository.rendezvous.repository_url
+  value       = data.aws_ecr_repository.rendezvous.repository_url
 }
 
 output "nlb_dns_name" {

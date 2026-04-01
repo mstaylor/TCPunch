@@ -1,4 +1,4 @@
-aws_region      = "us-east-1"
+doaws_region      = "us-east-1"
 vpc_id          = "vpc-xxxxxxxxxxxxxxxxx"
 subnet_ids      = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
 route53_zone_id = "ZXXXXXXXXXXXXXXXXX"

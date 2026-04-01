@@ -1,33 +1,9 @@
 # ============================================================
-# ECR Repository
+# ECR Repository (existing)
 # ============================================================
 
-resource "aws_ecr_repository" "rendezvous" {
-  name                 = var.name
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-}
-
-resource "aws_ecr_lifecycle_policy" "rendezvous" {
-  repository = aws_ecr_repository.rendezvous.name
-
-  policy = jsonencode({
-    rules = [
-      {
-        rulePriority = 1
-        description  = "Keep last 10 images"
-        selection = {
-          tagStatus   = "any"
-          countType   = "imageCountMoreThan"
-          countNumber = 10
-        }
-        action = { type = "expire" }
-      }
-    ]
-  })
+data "aws_ecr_repository" "rendezvous" {
+  name = var.ecr_repository_name
 }
 
 # ============================================================
@@ -86,7 +62,7 @@ resource "aws_ecs_task_definition" "rendezvous" {
   container_definitions = jsonencode([
     {
       name      = var.name
-      image     = "${aws_ecr_repository.rendezvous.repository_url}:${var.image_tag}"
+      image     = "${data.aws_ecr_repository.rendezvous.repository_url}:${var.image_tag}"
       essential = true
 
       portMappings = [
