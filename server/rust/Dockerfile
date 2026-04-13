@@ -31,10 +31,18 @@ RUN cargo build --release
 # Runtime stage
 FROM debian:bookworm-slim
 
-# Install runtime dependencies
+# Install runtime dependencies + AWS CLI
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
+    unzip \
+    jq \
+    && curl -s "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscliv2.zip \
+    && unzip -q /tmp/awscliv2.zip -d /tmp \
+    && /tmp/aws/install \
+    && rm -rf /tmp/aws /tmp/awscliv2.zip \
+    && apt-get purge -y unzip \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
@@ -42,8 +50,10 @@ RUN useradd -r -s /bin/false tcpunch
 
 WORKDIR /app
 
-# Copy binary from builder
+# Copy binary and entrypoint from builder
 COPY --from=builder /app/target/release/tcpunchd /app/tcpunchd
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Set ownership
 RUN chown -R tcpunch:tcpunch /app
@@ -68,4 +78,4 @@ ENV TCPUNCH_PORT=10000 \
     RUST_LOG=info
 
 # Run the server
-ENTRYPOINT ["/app/tcpunchd"]
+ENTRYPOINT ["/app/entrypoint.sh"]

@@ -3,13 +3,8 @@ output "ecr_repository_url" {
   value       = data.aws_ecr_repository.rendezvous.repository_url
 }
 
-output "nlb_dns_name" {
-  description = "NLB DNS name"
-  value       = aws_lb.rendezvous.dns_name
-}
-
 output "server_dns_name" {
-  description = "Route 53 DNS name for the server"
+  description = "Route 53 DNS name for the server (managed by container on startup)"
   value       = var.dns_name
 }
 

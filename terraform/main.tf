@@ -39,6 +39,36 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# IAM — ECS Task Role (used by the running container)
+resource "aws_iam_role" "ecs_task" {
+  name               = "${var.name}-ecs-task"
+  assume_role_policy = data.aws_iam_policy_document.ecs_assume_role.json
+}
+
+data "aws_iam_policy_document" "task_permissions" {
+  statement {
+    sid = "Route53SelfRegister"
+    actions = [
+      "route53:ChangeResourceRecordSets",
+    ]
+    resources = ["arn:aws:route53:::hostedzone/${var.route53_zone_id}"]
+  }
+
+  statement {
+    sid = "DescribeENI"
+    actions = [
+      "ec2:DescribeNetworkInterfaces",
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "ecs_task" {
+  name   = "${var.name}-task-permissions"
+  role   = aws_iam_role.ecs_task.id
+  policy = data.aws_iam_policy_document.task_permissions.json
+}
+
 # ============================================================
 # ECS Cluster (existing)
 # ============================================================
@@ -58,6 +88,7 @@ resource "aws_ecs_task_definition" "rendezvous" {
   cpu                      = var.task_cpu
   memory                   = var.task_memory
   execution_role_arn       = aws_iam_role.ecs_execution.arn
+  task_role_arn            = aws_iam_role.ecs_task.arn
 
   runtime_platform {
     operating_system_family = "LINUX"
@@ -88,6 +119,8 @@ resource "aws_ecs_task_definition" "rendezvous" {
           { name = "TCPUNCH_PEER_TIMEOUT", value = tostring(var.peer_timeout) },
           { name = "TCPUNCH_MAX_CONNECTIONS", value = tostring(var.max_connections) },
           { name = "RUST_LOG", value = var.log_level },
+          { name = "ROUTE53_ZONE_ID", value = var.route53_zone_id },
+          { name = "ROUTE53_DNS_NAME", value = var.dns_name },
         ],
         var.redis_url != "" ? [{ name = "REDIS_URL", value = var.redis_url }] : []
       )
@@ -147,50 +180,6 @@ resource "aws_security_group" "ecs_tasks" {
 }
 
 # ============================================================
-# Network Load Balancer
-# ============================================================
-
-resource "aws_lb" "rendezvous" {
-  name               = var.name
-  load_balancer_type = "network"
-  internal           = false
-  subnets            = var.subnet_ids
-
-  enable_deletion_protection = false
-}
-
-# Target group — TCP port 10000 with HTTP health check on 10001
-resource "aws_lb_target_group" "rendezvous" {
-  name        = var.name
-  port        = 10000
-  protocol    = "TCP"
-  target_type = "ip"
-  vpc_id      = var.vpc_id
-
-  health_check {
-    protocol            = "HTTP"
-    port                = "10001"
-    path                = "/livez"
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    interval            = 30
-  }
-
-  deregistration_delay = 30
-}
-
-resource "aws_lb_listener" "rendezvous" {
-  load_balancer_arn = aws_lb.rendezvous.arn
-  port              = 10000
-  protocol          = "TCP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.rendezvous.arn
-  }
-}
-
-# ============================================================
 # ECS Service
 # ============================================================
 
@@ -207,31 +196,10 @@ resource "aws_ecs_service" "rendezvous" {
     assign_public_ip = true
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.rendezvous.arn
-    container_name   = var.name
-    container_port   = 10000
-  }
-
   deployment_minimum_healthy_percent = 100
   deployment_maximum_percent         = 200
-
-  depends_on = [aws_lb_listener.rendezvous]
 }
 
-# ============================================================
-# Route 53
-# ============================================================
-
-resource "aws_route53_record" "rendezvous" {
-  zone_id         = var.route53_zone_id
-  name            = var.dns_name
-  type            = "A"
-  allow_overwrite = true
-
-  alias {
-    name                   = aws_lb.rendezvous.dns_name
-    zone_id                = aws_lb.rendezvous.zone_id
-    evaluate_target_health = true
-  }
-}
+# Route 53 is managed by the container's entrypoint script.
+# On startup, the container registers its public IP in Route 53
+# using the ROUTE53_ZONE_ID and ROUTE53_DNS_NAME environment variables.
